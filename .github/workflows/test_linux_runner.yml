@@ -1,0 +1,42 @@
+name: Linux runner
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  set_functions:
+    runs-on: ubuntu-latest
+    outputs:
+      functions: "[\"batch\",\"send\"]"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+  run_local_action:
+    runs-on: ubuntu-latest
+    needs:
+      - set_functions
+    strategy:
+      matrix:
+        function: ${{ fromJson(needs.set_functions.outputs.functions) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.SERVICE_PRINCIPAL_CREDS }}
+      - name: Use local my-action - disable function
+        uses: ./
+        with:
+          function-app-name: ${{ secrets.TEST_FUNCTION_APP }}
+          resource-group-name: ${{ secrets.TEST_RG }}
+          function-name: ${{ matrix.function }}
+          disable: true
+      - name: Use local my-action - enable function
+        uses: ./
+        with:
+          function-app-name: ${{ secrets.TEST_FUNCTION_APP }}
+          resource-group-name: ${{ secrets.TEST_RG }}
+          function-name: ${{ matrix.function }}
+          disable: false

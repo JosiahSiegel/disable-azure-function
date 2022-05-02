@@ -1,0 +1,30 @@
+# action.yml
+name: 'Disable Function'
+description: 'Specify a function within an Azure function app to disable or (re)enable'
+branding:
+  icon: 'zap'  
+  color: 'yellow'
+inputs:
+  function-app-name:
+    description: "Function app name"
+    required: true
+  resource-group-name:
+    description: "Resource group name"
+    required: true
+  function-name:
+    description: "Function name"
+    required: true
+  disable:
+    description: "Disable function: true/false"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Set function ${{ inputs.function-name }} disabled = ${{ inputs.disable }}"
+      shell: bash
+      run: |
+        az functionapp config appsettings set --name "${{ inputs.function-app-name }}" \
+        --resource-group "${{ inputs.resource-group-name }}" \
+        --settings "AzureWebJobs.${{ inputs.function-name }}.Disabled=${{ inputs.disable }}" \
+        --query '[?name==`AzureWebJobs.${{ inputs.function-name }}.Disabled`]'
